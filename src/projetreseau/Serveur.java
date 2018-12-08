@@ -58,8 +58,9 @@ public class Serveur {
                 } else { //Ecoute du message
                     String message_distant = in.readLine();
                     try {
+                        System.out.println("client 'crypté': " + message_distant);
                         String decrypte = cc.decrypter(message_distant, key);
-                        System.out.println("client : " + decrypte);
+                        System.out.println("client 'décrypté' : " + decrypte);
                         if (decrypte.equals("bye")) {
                             break;
                         }
