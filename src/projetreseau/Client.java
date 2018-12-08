@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
@@ -17,53 +18,63 @@ import javax.crypto.NoSuchPaddingException;
 public class Client {
 
     public static void main(String[] args) throws IOException, InvalidKeyException, NoSuchAlgorithmException,
-            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        
-        InetAddress addr;
-        Socket client = null;
-        PrintWriter out = null;
-        BufferedReader in = null;
-        
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, Exception {
+
         ResolutionDeNom rdn = new ResolutionDeNom();
         String ip = rdn.getIp();
-        
+
         CryptageCle cc = new CryptageCle();
         String key = cc.getCle();
-        
+
+        Socket client;
+        BufferedReader in;
+        PrintWriter out;
+
         try {
-            Scanner sc = new Scanner(System.in);
+
             client = new Socket(ip, 4444);
+
+            Scanner s = new Scanner(System.in);
+
             out = new PrintWriter(client.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-            String a = in.readLine();
-            if (! a.equals("bye")) {
-                System.out.println("serveur 'original' : " + a);
-                String crypte = cc.encrypter(a, key);
-                System.out.println("serveur 'crypté' : " + crypte);
+            boolean etat = false;
+
+            while (true) {
+                if (etat) { // Envoi du message
+
+                    String message = s.nextLine();
+                    String crypte = cc.encrypter(message, key);
+                    out.println(crypte);
+                    out.flush();
+
+                    
+                    etat = false;
+                } else { //Ecoute du message
+                    String message_distant = in.readLine();
+                    try {
+                        String decrypte = cc.decrypter(message_distant, key);
+                        System.out.println("serveur : " + decrypte);
+                        if (decrypte.equals("bye")) {
+                            break;
+                        }
+                    } catch (NullPointerException e) {
+                        break;
+                    }
+
+                    etat = true;
+
+                }
             }
-            
-
-        } catch (UnknownHostException e) {
-            System.out.println("Destination inconnu");
+            out.close();
+            in.close();
+            client.close();
+            //socketserver.close();
+        } catch (IOException e) {
+            System.out.println("On ne peut pas écouter le port 4444");
             System.exit(-1);
 
-        } catch (IOException ioe) {
-            System.out.println("Il faut inverstiguer ce IO marlich");
-            System.exit(-1);
         }
-
-        BufferedReader entree = new BufferedReader(new InputStreamReader(System.in));
-        String userInput;
-
-        while ((userInput = entree.readLine()) != null) {
-            out.println(userInput);
-            System.out.println("echo : " + in.readLine());
-        }
-        System.out.print("close");
-        out.close();
-        in.close();
-        entree.close();
-        client.close();
     }
 }

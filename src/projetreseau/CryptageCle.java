@@ -22,25 +22,29 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  *
  * @author ludovic
  */
 public class CryptageCle {
-    
+
     String cle = "";
 
-    public CryptageCle(){
+    /**
+     * Clé une clé si le fichier result n'est pas existant
+     */
+    public CryptageCle() {
 
         try {                                    //Si le fichier exisite
-            File f = new File("result.txt");
+            File f = new File("clef.txt");
             FileReader fr = new FileReader(f);
             BufferedReader br = new BufferedReader(fr);
 
             try {
                 String line = br.readLine();
-                
+
                 cle = line;
 
                 byte[] decodedKey = Base64.getDecoder().decode(line);
@@ -51,7 +55,7 @@ public class CryptageCle {
             } catch (IOException exception) {
                 System.out.println("Erreur lors de la lecture : " + exception.getMessage());
             }
-            
+
         } catch (FileNotFoundException exception) { //Si le fichier n'existe pas, on créé la clé
 
             Key key = null;
@@ -62,7 +66,7 @@ public class CryptageCle {
 
                 cle = Base64.getEncoder().encodeToString(key.getEncoded());
 
-                File fic = new File("result.txt"); // définir l'arborescence
+                File fic = new File("clef.txt"); // définir l'arborescence
                 fic.createNewFile();
 
                 FileWriter ficEcrire = new FileWriter(fic);
@@ -75,51 +79,44 @@ public class CryptageCle {
                 e.printStackTrace();
             }
         }
-    
+
     }
-    
-    public String getCle(){
+
+    public String getCle() {
         return cle;
     }
-    
-    public String encrypter(String message, String cle) throws InvalidKeyException, NoSuchAlgorithmException,
-            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
-        
-        byte[] data;
-        byte[] result;
-            
-        Cipher cipher = Cipher.getInstance("AES");
-        
-        byte[] decodedKey = Base64.getDecoder().decode(cle);
-        SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-        
-        cipher.init(Cipher.ENCRYPT_MODE, key); //Encriptage avec la clé
-        data = message.getBytes();
-        result = cipher.doFinal(data);
-        
-        String crypte = new String(result);
-        
-        return crypte;
+
+    /**
+     *
+     * @param message
+     * @param key
+     * @return Retourne le message décrypté en message crypté
+     * @throws Exception
+     */
+    public String encrypter(String message, String key) throws Exception {
+            Key clef = new SecretKeySpec(key.getBytes("ISO-8859-2"), "AES");
+            Cipher c = Cipher.getInstance("AES");
+            c.init(Cipher.ENCRYPT_MODE, clef);
+            byte[] encVal = c.doFinal(message.getBytes());
+            String encryptedValue = DatatypeConverter.printBase64Binary(encVal);
+            return encryptedValue;
     }
-    
-    public String decrypter(String message, String cle) throws InvalidKeyException, NoSuchAlgorithmException,
-            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException{
-        
-        byte[] data;
-        byte[] result;
-            
-        Cipher cipher = Cipher.getInstance("AES");
-        
-        byte[] decodedKey = Base64.getDecoder().decode(cle);
-        SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-        
-        cipher.init(Cipher.DECRYPT_MODE, key); //Encriptage avec la clé
-        data = message.getBytes();
-        result = cipher.doFinal(data);
-        
-        String decrypte = new String(result);
-        
-        return decrypte;
+
+    /**
+     *
+     * @param message
+     * @param key
+     * @return  Retourne le message crypté en message décrypté
+     * @throws Exception
+     */
+    public String decrypter(String message, String key) throws Exception {
+        Key clef = new SecretKeySpec(key.getBytes("ISO-8859-2"), "AES");
+        Cipher c = Cipher.getInstance("AES");
+        c.init(Cipher.DECRYPT_MODE, clef);       
+        byte[] decordedValue = DatatypeConverter.parseBase64Binary(message);
+        byte[] decValue = c.doFinal(decordedValue);
+        String decryptedValue = new String(decValue);
+        return decryptedValue;
     }
-    
+
 }

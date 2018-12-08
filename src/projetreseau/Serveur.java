@@ -24,16 +24,16 @@ import javax.crypto.NoSuchPaddingException;
  */
 public class Serveur {
 
-    public static void main(String[] zero) throws InvalidKeyException, NoSuchAlgorithmException, 
-            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        
+    public static void main(String[] zero) throws InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, Exception {
+
         ServerSocket socketserver;
         Socket client;
         BufferedReader in;
         PrintWriter out;
         CryptageCle cc = new CryptageCle();
         String key = cc.getCle();
-        
+
         try {
             socketserver = new ServerSocket(4444);
             Socket clientSocket = null;
@@ -44,25 +44,36 @@ public class Serveur {
             out = new PrintWriter(client.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
+            boolean etat = true;
+
             while (true) {
+                if (etat) { //Envoie du message
 
-                String message = s.nextLine();
-                out.println(message);
-                out.flush();
+                    String message = s.nextLine();
+                    String crypte = cc.encrypter(message, key);
+                    out.println(crypte);
+                    out.flush();
 
-                String message_distant = in.readLine();
-                System.out.println("client 'original' : " + message_distant);
-                
-                String crypte = cc.encrypter(message_distant, key);
-                System.out.println("client 'crypté' : " + crypte);
+                    etat = false;
+                } else { //Ecoute du message
+                    String message_distant = in.readLine();
+                    try {
+                        String decrypte = cc.decrypter(message_distant, key);
+                        System.out.println("client : " + decrypte);
+                        if (decrypte.equals("bye")) {
+                            break;
+                        }
+                    } catch (NullPointerException e) {
+                        break;
+                    }
 
-                try {
-                    clientSocket = socketserver.accept();
-                } catch (IOException e) {
-                    System.out.println("Acceptation échoué sur le port 4444");
-                    System.exit(-1);
+                    etat = true;
                 }
             }
+            out.close();
+            in.close();
+            client.close();
+            socketserver.close();
         } catch (IOException e) {
             System.out.println("On ne peut pas écouter le port 4444");
             System.exit(-1);
