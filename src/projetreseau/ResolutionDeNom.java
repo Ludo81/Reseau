@@ -13,14 +13,21 @@ import java.net.UnknownHostException;
  * @author ltourn01
  */
 public class ResolutionDeNom {
+    
+    String ip = "";
 
-    public static void main(String[] args) {
+    public ResolutionDeNom() {
         InetAddress address;
         try {
             address = InetAddress.getLocalHost();
-            System.out.println(address.getHostAddress());
+            ip = address.getHostAddress();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
     }
+    
+    public String getIp(){
+        return ip;
+    }
+    
 }

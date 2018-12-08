@@ -11,7 +11,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  *
@@ -19,12 +24,16 @@ import java.util.Scanner;
  */
 public class Serveur {
 
-    public static void main(String[] zero) {
+    public static void main(String[] zero) throws InvalidKeyException, NoSuchAlgorithmException, 
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+        
         ServerSocket socketserver;
         Socket client;
         BufferedReader in;
         PrintWriter out;
-
+        CryptageCle cc = new CryptageCle();
+        String key = cc.getCle();
+        
         try {
             socketserver = new ServerSocket(4444);
             Socket clientSocket = null;
@@ -42,7 +51,10 @@ public class Serveur {
                 out.flush();
 
                 String message_distant = in.readLine();
-                System.out.println("client : " + message_distant);
+                System.out.println("client 'original' : " + message_distant);
+                
+                String crypte = cc.encrypter(message_distant, key);
+                System.out.println("client 'crypté' : " + crypte);
 
                 try {
                     clientSocket = socketserver.accept();
